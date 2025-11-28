@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>로딩 실험 - 25-2 인간공학과실습 1조(강정한, 김동하, 고혁원, 진창욱)</title>
+  <title>로딩 실험 - 25-2 인간공학과실습 1조</title>
   <style>
     body {
       margin: 0;
@@ -27,8 +27,9 @@
 
     h1 {
       margin: 0;
-      font-size: 20px;
+      font-size: 22px;
       color: #333366;
+      font-weight: bold;
     }
 
     h2 {
@@ -93,7 +94,7 @@
       overflow: hidden;
       height: 18px;
       margin-bottom: 8px;
-      width: 50%; /* 기본값, JS에서 short/long으로 바꿈 */
+      width: 50%; 
       max-width: 480px;
       transition: width 0.2s ease;
     }
@@ -116,33 +117,29 @@
       font-size: 11px;
       color: #999;
     }
+
+    a {
+      color: #555aee;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>25-2 인간공학과실습 1조</h1>
+    <h1>25-2 인간공학과실습 1조 (강정한, 김동하, 고혁원, 진창욱)</h1>
     <h2>로딩 화면 사용자 경험 실험</h2>
     <div class="subtitle">아래에서 실험 조건을 선택하면 10초 동안 로딩 화면이 재생됩니다.</div>
 
     <div class="buttons">
-      <button class="condition-btn" data-pattern="baseline" data-bar="short">
-        Baseline + Short
-      </button>
-      <button class="condition-btn" data-pattern="baseline" data-bar="long">
-        Baseline + Long
-      </button>
-      <button class="condition-btn" data-pattern="front" data-bar="short">
-        Front-loaded + Short
-      </button>
-      <button class="condition-btn" data-pattern="front" data-bar="long">
-        Front-loaded + Long
-      </button>
-      <button class="condition-btn" data-pattern="back" data-bar="short">
-        Back-loaded + Short
-      </button>
-      <button class="condition-btn" data-pattern="back" data-bar="long">
-        Back-loaded + Long
-      </button>
+      <button class="condition-btn" data-pattern="baseline" data-bar="short">Baseline + Short</button>
+      <button class="condition-btn" data-pattern="baseline" data-bar="long">Baseline + Long</button>
+      <button class="condition-btn" data-pattern="front" data-bar="short">Front-loaded + Short</button>
+      <button class="condition-btn" data-pattern="front" data-bar="long">Front-loaded + Long</button>
+      <button class="condition-btn" data-pattern="back" data-bar="short">Back-loaded + Short</button>
+      <button class="condition-btn" data-pattern="back" data-bar="long">Back-loaded + Long</button>
     </div>
 
     <div class="status-text" id="statusText">
@@ -157,13 +154,15 @@
     </div>
 
     <div class="hint">
-      각 참가자는 한 가지 조건만 경험한 뒤, 바로 설문(구글폼 링크: https://forms.gle/1MZjAX6j1EskyYXBA)에 응답하면 됩니다.
+      각 참가자는 한 가지 조건만 경험한 뒤, 바로 설문(구글폼 링크:
+      <a href="https://forms.gle/UXJSYL8w8vt43n4E7" target="_blank">https://forms.gle/UXJSYL8w8vt43n4E7</a>
+      )에 응답하면 됩니다.
     </div>
   </div>
 
   <script>
-    const TOTAL_DURATION = 10000; // 10초
-    const INTERVAL = 50; // 0.05초마다 업데이트
+    const TOTAL_DURATION = 10000; 
+    const INTERVAL = 50;
 
     const statusText = document.getElementById("statusText");
     const progressContainer = document.getElementById("progressContainer");
@@ -177,41 +176,26 @@
       const t = Math.min(Math.max(elapsed, 0), TOTAL_DURATION);
 
       if (pattern === "baseline") {
-        const ratio = t / TOTAL_DURATION;
-        return ratio * 100;
+        return (t / TOTAL_DURATION) * 100;
       }
 
       if (pattern === "front") {
-        if (t <= 3000) {
-          const ratio = t / 3000;
-          return ratio * 70;
-        } else {
-          const ratio = (t - 3000) / 7000;
-          return 70 + Math.min(Math.max(ratio, 0), 1) * 30;
-        }
+        if (t <= 3000) return (t / 3000) * 70;
+        return 70 + ((t - 3000) / 7000) * 30;
       }
 
       if (pattern === "back") {
-        if (t <= 7000) {
-          const ratio = t / 7000;
-          return ratio * 30;
-        } else {
-          const ratio = (t - 7000) / 3000;
-          return 30 + Math.min(Math.max(ratio, 0), 1) * 70;
-        }
+        if (t <= 7000) return (t / 7000) * 30;
+        return 30 + ((t - 7000) / 3000) * 70;
       }
 
       return 0;
     }
 
     function setBarLength(barType) {
-      if (barType === "short") {
-        progressContainer.style.width = "35%";
-      } else if (barType === "long") {
-        progressContainer.style.width = "70%";
-      } else {
-        progressContainer.style.width = "50%";
-      }
+      if (barType === "short") progressContainer.style.width = "35%";
+      else if (barType === "long") progressContainer.style.width = "70%";
+      else progressContainer.style.width = "50%";
     }
 
     function startLoading(pattern, barType, labelText) {
@@ -238,11 +222,10 @@
         if (elapsed >= TOTAL_DURATION) {
           clearInterval(timerId);
           timerId = null;
+
           progressFill.style.width = "100%";
           percentText.textContent = "100%";
           statusText.textContent = `실험 조건: ${labelText} - 로딩이 완료되었습니다.`;
-          // 여기에서 구글폼 자동 열고 싶으면 아래 주석 해제 후 URL 넣으면 됨
-          // window.open("https://your-google-form-url", "_blank");
         }
       }, INTERVAL);
     }
@@ -252,7 +235,6 @@
         const pattern = btn.dataset.pattern;
         const bar = btn.dataset.bar;
         const labelText = btn.textContent.trim();
-
         startLoading(pattern, bar, labelText);
       });
     });
