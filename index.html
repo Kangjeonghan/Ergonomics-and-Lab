@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>로딩 실험 - 25-2 인간공학과실습 1조</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "맑은 고딕", system-ui, -apple-system, BlinkMacSystemFont;
+      background: #f5f6ff;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: #ffffff;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      border-radius: 16px;
+      padding: 24px 32px 32px;
+      max-width: 720px;
+      width: 90%;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      color: #333366;
+    }
+
+    h2 {
+      margin-top: 6px;
+      font-size: 18px;
+      color: #555577;
+    }
+
+    .subtitle {
+      margin-top: 4px;
+      font-size: 13px;
+      color: #777;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 14px;
+      margin-top: 20px;
+    }
+
+    button.condition-btn {
+      padding: 10px 8px;
+      border-radius: 8px;
+      border: 1px solid #d4d6ff;
+      background: #f8f8ff;
+      cursor: pointer;
+      font-size: 13px;
+      transition: transform 0.05s ease, box-shadow 0.05s ease, background 0.1s ease;
+    }
+
+    button.condition-btn:hover {
+      background: #eef0ff;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+      transform: translateY(-1px);
+    }
+
+    button.condition-btn:active {
+      transform: translateY(0);
+      box-shadow: none;
+      background: #e2e5ff;
+    }
+
+    .status-text {
+      margin-top: 22px;
+      font-size: 14px;
+      min-height: 20px;
+    }
+
+    .progress-wrapper {
+      margin-top: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 80px;
+      flex-direction: column;
+    }
+
+    .progress-bar-container {
+      background: #e0e0ef;
+      border-radius: 999px;
+      overflow: hidden;
+      height: 18px;
+      margin-bottom: 8px;
+      width: 50%; /* 기본값, JS에서 short/long으로 바꿈 */
+      max-width: 480px;
+      transition: width 0.2s ease;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #6c6cff, #9292ff);
+      transition: width 0.05s linear;
+    }
+
+    .percent-text {
+      font-size: 13px;
+      color: #444;
+      min-height: 18px;
+    }
+
+    .hint {
+      margin-top: 18px;
+      font-size: 11px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>25-2 인간공학과실습 1조</h1>
+    <h2>로딩 화면 사용자 경험 실험</h2>
+    <div class="subtitle">아래에서 실험 조건을 선택하면 10초 동안 로딩 화면이 재생됩니다.</div>
+
+    <div class="buttons">
+      <button class="condition-btn" data-pattern="baseline" data-bar="short">
+        Baseline + Short
+      </button>
+      <button class="condition-btn" data-pattern="baseline" data-bar="long">
+        Baseline + Long
+      </button>
+      <button class="condition-btn" data-pattern="front" data-bar="short">
+        Front-loaded + Short
+      </button>
+      <button class="condition-btn" data-pattern="front" data-bar="long">
+        Front-loaded + Long
+      </button>
+      <button class="condition-btn" data-pattern="back" data-bar="short">
+        Back-loaded + Short
+      </button>
+      <button class="condition-btn" data-pattern="back" data-bar="long">
+        Back-loaded + Long
+      </button>
+    </div>
+
+    <div class="status-text" id="statusText">
+      실험 조건을 선택하면 로딩이 시작됩니다.
+    </div>
+
+    <div class="progress-wrapper">
+      <div class="progress-bar-container" id="progressContainer">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+      <div class="percent-text" id="percentText">0%</div>
+    </div>
+
+    <div class="hint">
+      각 참가자는 한 가지 조건만 경험한 뒤, 바로 설문(구글폼)에 응답하면 됩니다.
+    </div>
+  </div>
+
+  <script>
+    const TOTAL_DURATION = 10000; // 10초
+    const INTERVAL = 50; // 0.05초마다 업데이트
+
+    const statusText = document.getElementById("statusText");
+    const progressContainer = document.getElementById("progressContainer");
+    const progressFill = document.getElementById("progressFill");
+    const percentText = document.getElementById("percentText");
+
+    let timerId = null;
+    let startTime = null;
+
+    function getProgress(pattern, elapsed) {
+      const t = Math.min(Math.max(elapsed, 0), TOTAL_DURATION);
+
+      if (pattern === "baseline") {
+        const ratio = t / TOTAL_DURATION;
+        return ratio * 100;
+      }
+
+      if (pattern === "front") {
+        if (t <= 3000) {
+          const ratio = t / 3000;
+          return ratio * 70;
+        } else {
+          const ratio = (t - 3000) / 7000;
+          return 70 + Math.min(Math.max(ratio, 0), 1) * 30;
+        }
+      }
+
+      if (pattern === "back") {
+        if (t <= 7000) {
+          const ratio = t / 7000;
+          return ratio * 30;
+        } else {
+          const ratio = (t - 7000) / 3000;
+          return 30 + Math.min(Math.max(ratio, 0), 1) * 70;
+        }
+      }
+
+      return 0;
+    }
+
+    function setBarLength(barType) {
+      if (barType === "short") {
+        progressContainer.style.width = "35%";
+      } else if (barType === "long") {
+        progressContainer.style.width = "70%";
+      } else {
+        progressContainer.style.width = "50%";
+      }
+    }
+
+    function startLoading(pattern, barType, labelText) {
+      if (timerId !== null) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+
+      setBarLength(barType);
+      progressFill.style.width = "0%";
+      percentText.textContent = "0%";
+
+      statusText.textContent = `실험 조건: ${labelText} (10초 로딩 중)`;
+      startTime = performance.now();
+
+      timerId = setInterval(() => {
+        const now = performance.now();
+        const elapsed = now - startTime;
+
+        const progress = getProgress(pattern, elapsed);
+        progressFill.style.width = `${progress}%`;
+        percentText.textContent = `${Math.round(progress)}%`;
+
+        if (elapsed >= TOTAL_DURATION) {
+          clearInterval(timerId);
+          timerId = null;
+          progressFill.style.width = "100%";
+          percentText.textContent = "100%";
+          statusText.textContent = `실험 조건: ${labelText} - 로딩이 완료되었습니다.`;
+          // 여기에서 구글폼 자동 열고 싶으면 아래 주석 해제 후 URL 넣으면 됨
+          // window.open("https://your-google-form-url", "_blank");
+        }
+      }, INTERVAL);
+    }
+
+    document.querySelectorAll(".condition-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const pattern = btn.dataset.pattern;
+        const bar = btn.dataset.bar;
+        const labelText = btn.textContent.trim();
+
+        startLoading(pattern, bar, labelText);
+      });
+    });
+  </script>
+</body>
+</html>
